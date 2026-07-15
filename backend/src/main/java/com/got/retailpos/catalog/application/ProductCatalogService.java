@@ -20,7 +20,7 @@ import com.got.retailpos.catalog.infrastructure.ProductRepository;
 import com.got.retailpos.shared.application.ResourceNotFoundException;
 
 @Service
-public class ProductCatalogService {
+public class ProductCatalogService implements ProductCatalogReader {
 
 	private final CategoryRepository categoryRepository;
 	private final ProductRepository productRepository;
@@ -52,6 +52,15 @@ public class ProductCatalogService {
 		return StringUtils.hasText(search)
 				? productRepository.search(search.strip(), pageable)
 				: productRepository.findAll(pageable);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public java.util.Map<UUID, CatalogProduct> findActiveProducts(java.util.Collection<UUID> productIds) {
+		return productRepository.findAllByIdInAndActiveTrue(productIds).stream()
+				.collect(java.util.stream.Collectors.toUnmodifiableMap(
+						Product::getId,
+						product -> new CatalogProduct(product.getId(), product.getSku(), product.getName())));
 	}
 
 	@Transactional

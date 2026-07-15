@@ -1,5 +1,6 @@
 package com.got.retailpos.catalog.infrastructure;
 
+import java.util.Collection;
 import java.util.UUID;
 import java.util.List;
 import java.util.Set;
@@ -35,4 +36,6 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
 	@Query("select product.barcode from Product product where product.barcode in :barcodes")
 	List<String> findExistingBarcodes(@Param("barcodes") Set<String> barcodes);
+
+	List<Product> findAllByIdInAndActiveTrue(Collection<UUID> ids);
 }
