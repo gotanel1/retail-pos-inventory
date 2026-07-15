@@ -1,6 +1,8 @@
 package com.got.retailpos.catalog.infrastructure;
 
 import java.util.UUID;
+import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,4 +29,10 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 			   or lower(coalesce(product.barcode, '')) like lower(concat('%', :search, '%'))
 			""")
 	Page<Product> search(@Param("search") String search, Pageable pageable);
+
+	@Query("select upper(product.sku) from Product product where upper(product.sku) in :skus")
+	List<String> findExistingSkus(@Param("skus") Set<String> skus);
+
+	@Query("select product.barcode from Product product where product.barcode in :barcodes")
+	List<String> findExistingBarcodes(@Param("barcodes") Set<String> barcodes);
 }

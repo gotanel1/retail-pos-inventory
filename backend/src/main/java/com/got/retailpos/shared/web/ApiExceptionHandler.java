@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.got.retailpos.identity.application.UsernameAlreadyExistsException;
 import com.got.retailpos.identity.security.InvalidCredentialsException;
 import com.got.retailpos.catalog.application.CatalogConflictException;
+import com.got.retailpos.catalog.application.InvalidCsvException;
 import com.got.retailpos.shared.application.ResourceNotFoundException;
 
 @RestControllerAdvice
@@ -34,6 +35,11 @@ public class ApiExceptionHandler {
 	@ExceptionHandler(CatalogConflictException.class)
 	ProblemDetail handleCatalogConflict(CatalogConflictException exception) {
 		return problem(HttpStatus.CONFLICT, "ข้อมูลสินค้าซ้ำ", exception.getMessage());
+	}
+
+	@ExceptionHandler(InvalidCsvException.class)
+	ProblemDetail handleInvalidCsv(InvalidCsvException exception) {
+		return problem(HttpStatus.BAD_REQUEST, "ไฟล์ CSV ไม่ถูกต้อง", exception.getMessage());
 	}
 
 	@ExceptionHandler(ResourceNotFoundException.class)
