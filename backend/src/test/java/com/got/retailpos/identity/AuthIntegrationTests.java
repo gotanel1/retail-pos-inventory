@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -120,6 +121,17 @@ class AuthIntegrationTests {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.headerName", is("X-CSRF-TOKEN")))
 				.andExpect(jsonPath("$.token").isNotEmpty());
+	}
+
+	@Test
+	void shouldReturnBrowserSecurityHeaders() throws Exception {
+		mockMvc.perform(get("/api/v1/auth/csrf"))
+				.andExpect(status().isOk())
+				.andExpect(header().string("Content-Security-Policy", org.hamcrest.Matchers.containsString("default-src 'self'")))
+				.andExpect(header().string("X-Frame-Options", "DENY"))
+				.andExpect(header().string("X-Content-Type-Options", "nosniff"))
+				.andExpect(header().string("Referrer-Policy", "same-origin"))
+				.andExpect(header().string("Permissions-Policy", "camera=(), microphone=(), geolocation=()"));
 	}
 
 	@Test

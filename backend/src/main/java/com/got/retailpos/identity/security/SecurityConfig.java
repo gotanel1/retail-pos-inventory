@@ -28,6 +28,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 import com.got.retailpos.identity.infrastructure.UserAccountRepository;
 
@@ -68,6 +69,15 @@ public class SecurityConfig {
 						.logoutSuccessHandler((request, response, authentication) ->
 								response.setStatus(HttpStatus.NO_CONTENT.value())))
 				.requestCache(cache -> cache.disable())
+				.headers(headers -> headers
+						.contentSecurityPolicy(csp -> csp.policyDirectives(
+								"default-src 'self'; img-src 'self' data: https://*.stripe.com; "
+										+ "style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; "
+										+ "object-src 'none'; base-uri 'self'; frame-ancestors 'none'"))
+						.referrerPolicy(referrer -> referrer
+								.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN))
+						.permissionsPolicyHeader(permissions -> permissions
+								.policy("camera=(), microphone=(), geolocation=()")))
 				.formLogin(AbstractHttpConfigurer::disable)
 				.httpBasic(AbstractHttpConfigurer::disable);
 		return http.build();

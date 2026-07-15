@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: retail-pos-inventory
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: retail-pos-inventory-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: retail-pos-inventory-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: retail-pos-inventory-db
+          property: password
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: BUSINESS_ZONE
+        value: Asia/Bangkok
+      - key: APP_DEMO_DATA
+        value: "true"
+      - key: APP_DEMO_PASSWORD
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: SPRINGDOC_ENABLED
+        value: "false"
+      - key: APP_PAYMENT_FAKE
+        value: "false"
+
+databases:
+  - name: retail-pos-inventory-db
+    plan: free
+    region: singapore
+    postgresMajorVersion: "18"
+    databaseName: retail_pos
+    user: retail_pos
+    ipAllowList: []

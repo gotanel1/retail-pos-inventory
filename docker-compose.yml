@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-retail}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-retail_local_password}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
@@ -32,6 +32,12 @@ services:
       APP_BOOTSTRAP_OWNER_DISPLAY_NAME: ${APP_BOOTSTRAP_OWNER_DISPLAY_NAME:-เจ้าของร้าน}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      APP_DEMO_DATA: ${APP_DEMO_DATA:-false}
+      APP_DEMO_PASSWORD: ${APP_DEMO_PASSWORD:-}
+      BUSINESS_ZONE: ${BUSINESS_ZONE:-Asia/Bangkok}
+      SPRINGDOC_ENABLED: ${SPRINGDOC_ENABLED:-true}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
+      APP_PAYMENT_FAKE: ${APP_PAYMENT_FAKE:-false}
     ports:
       - "${APP_PORT:-8080}:8080"
     depends_on:

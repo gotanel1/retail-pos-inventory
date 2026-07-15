@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import com.got.retailpos.payments.application.PromptPayGateway;
 import com.stripe.StripeClient;
 import com.stripe.exception.StripeException;
@@ -11,6 +12,7 @@ import com.stripe.net.RequestOptions;
 import com.stripe.param.PaymentIntentCreateParams;
 
 @Component
+@ConditionalOnProperty(name="app.payment.fake",havingValue="false",matchIfMissing=true)
 public class StripePromptPayGateway implements PromptPayGateway {
 	private final String secretKey;
 	public StripePromptPayGateway(@Value("${app.stripe.secret-key:}") String secretKey){this.secretKey=secretKey;}

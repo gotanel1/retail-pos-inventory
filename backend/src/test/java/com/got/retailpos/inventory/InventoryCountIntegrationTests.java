@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -121,6 +122,17 @@ class InventoryCountIntegrationTests {
 
 		assertThatThrownBy(() -> countService.approve(count.getId(), manager.id()))
 				.isInstanceOf(InventoryConflictException.class);
+	}
+
+	@Test
+	@Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+	void shouldReturnCountItemsAfterReadTransactionCloses() throws Exception {
+		var manager = principal("manager-read", Role.MANAGER);
+		countService.submit(input(2), manager.id());
+
+		mockMvc.perform(get("/api/v1/inventory/counts").with(user(manager)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content[0].items[0].productId", is(product.getId().toString())));
 	}
 
 	private InventoryCountService.CountInput input(int counted) {

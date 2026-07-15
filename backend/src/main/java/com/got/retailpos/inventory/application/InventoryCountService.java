@@ -91,7 +91,11 @@ public class InventoryCountService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<InventoryCount> findAll(Pageable pageable) { return countRepository.findAllBy(pageable); }
+	public Page<InventoryCount> findAll(Pageable pageable) {
+		var page = countRepository.findAllBy(pageable);
+		page.forEach(count -> count.getItems().size());
+		return page;
+	}
 
 	@Transactional(readOnly = true)
 	public Page<StockMovement> findAdjustments(Pageable pageable) {

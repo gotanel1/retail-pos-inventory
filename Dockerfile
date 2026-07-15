@@ -23,5 +23,6 @@ COPY --from=backend-build --chown=app:app /workspace/backend/target/backend-*.ja
 
 USER app
 EXPOSE 8080
+HEALTHCHECK --interval=5s --timeout=3s --start-period=15s --retries=12 CMD wget -q --spider http://localhost:8080/actuator/health || exit 1
 
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]

@@ -7,6 +7,7 @@ import PointOfSaleOutlinedIcon from '@mui/icons-material/PointOfSaleOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
+import InsightsOutlinedIcon from '@mui/icons-material/InsightsOutlined'
 import {
   AppBar,
   Box,
@@ -44,6 +45,7 @@ export function AuthenticatedShell({ children, user, isLoggingOut, onLogout }: A
     { label: 'ยอดสต็อก', path: '/inventory', icon: <Inventory2OutlinedIcon fontSize="small" /> },
     ...(user.role !== 'INVENTORY_STAFF' ? [{ label: 'ขายหน้าร้าน', path: '/pos', icon: <PointOfSaleOutlinedIcon fontSize="small" /> }] : []),
     ...(user.role !== 'INVENTORY_STAFF' ? [{ label: 'ลูกค้า', path: '/customers', icon: <PeopleOutlineOutlinedIcon fontSize="small" /> }] : []),
+    ...(['OWNER', 'MANAGER'].includes(user.role) ? [{ label: 'รายงาน', path: '/reports', icon: <InsightsOutlinedIcon fontSize="small" /> }] : []),
     ...(['OWNER', 'MANAGER'].includes(user.role) ? [{ label: 'ตั้งค่า', path: '/settings', icon: <SettingsOutlinedIcon fontSize="small" /> }] : []),
     ...(catalogEditors.includes(user.role)
       ? [
