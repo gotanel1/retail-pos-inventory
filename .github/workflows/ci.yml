@@ -65,3 +65,55 @@ jobs:
         uses: actions/checkout@v4
       - name: Build application image
         run: docker build --tag retail-pos-inventory:ci .
+
+  e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    needs:
+      - backend
+      - frontend
+    env:
+      POSTGRES_PASSWORD: e2e-postgres-password
+      POSTGRES_PORT: "55432"
+      APP_BOOTSTRAP_OWNER_PASSWORD: owner-password-for-e2e
+      APP_DEMO_DATA: "true"
+      APP_DEMO_PASSWORD: demo-password-for-e2e
+      E2E_DEMO_PASSWORD: demo-password-for-e2e
+      SPRING_PROFILES_ACTIVE: e2e
+      APP_PAYMENT_FAKE: "true"
+      SPRINGDOC_ENABLED: "false"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Install Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Start E2E application
+        run: docker compose up --build --detach --wait --wait-timeout 180
+      - name: Run browser flows
+        working-directory: frontend
+        run: npm run test:e2e
+      - name: Show container logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Upload Playwright evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-evidence
+          path: |
+            frontend/test-results
+            frontend/playwright-report
+          if-no-files-found: ignore
+      - name: Stop E2E application
+        if: always()
+        run: docker compose down --volumes
