@@ -18,9 +18,39 @@ Development follows GitHub Flow. Every feature is linked to a GitHub Issue, impl
 
 Commit subjects use Conventional Commits with Thai descriptions. Durable Thai learning notes are kept in `docs/learning`, while architecture decisions are recorded in `docs/adr`.
 
+## Local development
+
+Copy `.env.example` to `.env`, change the local password, then start the complete application:
+
+```powershell
+docker compose up --build
+```
+
+Useful endpoints:
+
+- Application: `http://localhost:8080`
+- Health: `http://localhost:8080/actuator/health`
+- OpenAPI: `http://localhost:8080/api-docs`
+- Swagger UI: `http://localhost:8080/swagger-ui`
+
+For frontend-only development, run `npm install` and `npm run dev` in `frontend`. Vite proxies `/api` and `/actuator` to Spring Boot on port 8080.
+
+## Verification
+
+```powershell
+cd backend
+.\mvnw.cmd verify
+
+cd ..\frontend
+npm test
+npm run build
+```
+
+Backend integration tests use Testcontainers and therefore require Docker Desktop to be running.
+
 ## Product status
 
-Repository bootstrap is in progress. See [Project Charter](docs/product/project-charter.md) for the product boundaries and acceptance criteria.
+Foundation development is in progress. See [Project Charter](docs/product/project-charter.md) for the product boundaries and acceptance criteria.
 
 ## License
 
