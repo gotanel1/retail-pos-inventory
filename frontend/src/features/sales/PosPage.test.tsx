@@ -43,6 +43,39 @@ describe('POS cash flow', () => {
     expect(new Headers(checkout?.[1]?.headers).get('X-CSRF-TOKEN')).toBe('csrf-value')
     await waitFor(() => expect(fetch).toHaveBeenCalled())
   })
+
+  it('แสดง QR PromptPay และรอผลยืนยันจาก webhook ก่อนออกใบเสร็จ', async () => {
+    let completeStatusRequest: (() => void) | undefined
+    vi.mocked(fetch).mockImplementation(async (input, init) => {
+      const url = input.toString()
+      if (url.includes('/api/v1/products?')) return json(page([{ id: 'p1', categoryId: 'c1', categoryName: 'Tools', sku: 'HAMMER-01', barcode: null, name: 'ค้อนหงอน', salePrice: 107, lowStockThreshold: 1, active: true }]))
+      if (url.includes('/api/v1/customers?')) return json(page([]))
+      if (url.endsWith('/api/v1/store-settings')) return json({ storeName: 'ร้านทดสอบ', vatEnabled: true, vatRate: 7, receiptFooter: 'ขอบคุณค่ะ' })
+      if (url.endsWith('/api/v1/auth/csrf')) return json({ headerName: 'X-CSRF-TOKEN', token: 'csrf-value' })
+      if (url.endsWith('/api/v1/sales') && init?.method === 'POST') return json(draft, 201)
+      if (url.endsWith('/api/v1/sales/sale-1/checkout/promptpay')) return json({ paymentId: 'payment-1', saleId: 'sale-1', amount: 107, paymentIntentId: 'pi_test', qrCodeImageUrl: 'https://example.test/qr.png', expiresAt: '2026-07-15T11:10:00Z', status: 'PENDING' })
+      if (url.endsWith('/api/v1/sales/sale-1') && (!init?.method || init.method === 'GET')) return new Promise<Response>((resolve) => { completeStatusRequest = () => resolve(json({ ...draft, status: 'COMPLETED', receiptNumber: 'R-000002', completedAt: '2026-07-15T11:01:00Z', items: [{ ...item, unitCostSnapshot: 60 }] })) })
+      throw new Error(`unexpected request: ${url}`)
+    })
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(await screen.findByRole('combobox', { name: 'สินค้า' }))
+    await user.click(screen.getByRole('option', { name: /HAMMER-01/ }))
+    await user.click(screen.getByRole('button', { name: 'เพิ่ม' }))
+    await user.click(screen.getByRole('button', { name: 'สร้างบิลและยืนยันราคา' }))
+    await user.click(await screen.findByRole('button', { name: 'ชำระด้วย PromptPay' }))
+
+    expect(await screen.findByRole('img', { name: 'QR PromptPay' })).toHaveAttribute('src', 'https://example.test/qr.png')
+    expect(screen.getByText('กำลังรอ Stripe webhook ยืนยันการชำระเงิน')).toBeInTheDocument()
+    const checkout = vi.mocked(fetch).mock.calls.find(([url]) => url === '/api/v1/sales/sale-1/checkout/promptpay')
+    expect(new Headers(checkout?.[1]?.headers).get('Idempotency-Key')).toBeTruthy()
+    expect(new Headers(checkout?.[1]?.headers).get('X-CSRF-TOKEN')).toBe('csrf-value')
+
+    completeStatusRequest?.()
+    expect(await screen.findByText('ชำระโดย: PromptPay')).toBeInTheDocument()
+    expect(screen.getByText((_, element) => element?.tagName === 'P' && element.textContent === 'เลขที่: R-000002')).toBeInTheDocument()
+  })
 })
 
 function renderPage() {

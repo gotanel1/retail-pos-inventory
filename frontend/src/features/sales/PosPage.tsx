@@ -1,5 +1,6 @@
 import AddShoppingCartOutlinedIcon from '@mui/icons-material/AddShoppingCartOutlined'
 import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined'
+import QrCode2OutlinedIcon from '@mui/icons-material/QrCode2Outlined'
 import {
   Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, GlobalStyles,
   InputLabel, MenuItem, Paper, Select, Stack, Table, TableBody, TableCell, TableHead, TableRow,
@@ -11,8 +12,8 @@ import type { FormEvent } from 'react'
 import { ApiError } from '../../api/http'
 import { getProductOptions } from '../catalog/catalogApi'
 import { getCustomers } from '../customers/customerApi'
-import { applyDiscount, checkoutCash, createSale, getStoreSettings } from './salesApi'
-import type { DiscountType, Sale } from './salesApi'
+import { applyDiscount, checkoutCash, checkoutPromptPay, createSale, getSale, getStoreSettings } from './salesApi'
+import type { DiscountType, PromptPayPayment, Sale } from './salesApi'
 
 interface CartLine { productId: string; quantity: number }
 
@@ -28,6 +29,7 @@ export function PosPage() {
   const [customerId, setCustomerId] = useState('')
   const [cart, setCart] = useState<CartLine[]>([])
   const [sale, setSale] = useState<Sale | null>(null)
+  const [promptPay, setPromptPay] = useState<PromptPayPayment | null>(null)
   const [cashReceived, setCashReceived] = useState('')
   const [discountOpen, setDiscountOpen] = useState(false)
   const products = useQuery({ queryKey: ['product-options'], queryFn: getProductOptions })
@@ -42,6 +44,17 @@ export function PosPage() {
     mutationFn: ({ saleId, cash }: { saleId: string; cash: string }) => checkoutCash(saleId, cash, crypto.randomUUID()),
     onSuccess: setSale,
   })
+  const promptPayCheckout = useMutation({
+    mutationFn: (saleId: string) => checkoutPromptPay(saleId, crypto.randomUUID()),
+    onSuccess: setPromptPay,
+  })
+  const paymentSale = useQuery({
+    queryKey: ['sale-payment-status', promptPay?.saleId],
+    queryFn: () => getSale(promptPay!.saleId),
+    enabled: Boolean(promptPay),
+    refetchInterval: (query) => query.state.data?.status === 'COMPLETED' || query.state.data?.status === 'EXPIRED' ? false : 2_000,
+  })
+  const currentSale = paymentSale.data ?? sale
 
   function addItem() {
     if (!productId || Number(quantity) < 1) return
@@ -55,15 +68,15 @@ export function PosPage() {
   }
 
   function reset() {
-    setSale(null); setCart([]); setCashReceived(''); setCustomerId('')
+    setSale(null); setPromptPay(null); setCart([]); setCashReceived(''); setCustomerId('')
   }
 
   const productMap = new Map((products.data?.content ?? []).map((product) => [product.id, product]))
-  const error = [create.error, discount.error, checkout.error].find(Boolean)
+  const error = [create.error, discount.error, checkout.error, promptPayCheckout.error, paymentSale.error].find(Boolean)
   const errorMessage = error instanceof ApiError ? error.message : error ? 'ดำเนินรายการไม่สำเร็จ กรุณาลองใหม่' : null
 
-  if (sale?.status === 'COMPLETED') {
-    return <Receipt sale={sale} settings={settings.data} onNewSale={reset} />
+  if (currentSale?.status === 'COMPLETED') {
+    return <Receipt paymentMethod={promptPay ? 'PROMPTPAY' : 'CASH'} sale={currentSale} settings={settings.data} onNewSale={reset} />
   }
 
   return <Stack spacing={3}>
@@ -72,26 +85,40 @@ export function PosPage() {
     <Stack direction={{ xs: 'column', lg: 'row' }} spacing={3} sx={{ alignItems: 'flex-start' }}>
       <Paper variant="outlined" sx={{ borderRadius: 3, flex: 1, p: 3, width: '100%' }}>
         <Stack spacing={2}>
-          <FormControl fullWidth disabled={Boolean(sale)}><InputLabel id="customer-label">ลูกค้า (ไม่บังคับ)</InputLabel><Select label="ลูกค้า (ไม่บังคับ)" labelId="customer-label" value={customerId} onChange={(event) => setCustomerId(event.target.value)}><MenuItem value="">ลูกค้าทั่วไป</MenuItem>{(customers.data?.content ?? []).map((customer) => <MenuItem key={customer.id} value={customer.id}>{customer.name}{customer.phone ? ` · ${customer.phone}` : ''}</MenuItem>)}</Select></FormControl>
-          {!sale && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <FormControl fullWidth disabled={Boolean(currentSale)}><InputLabel id="customer-label">ลูกค้า (ไม่บังคับ)</InputLabel><Select label="ลูกค้า (ไม่บังคับ)" labelId="customer-label" value={customerId} onChange={(event) => setCustomerId(event.target.value)}><MenuItem value="">ลูกค้าทั่วไป</MenuItem>{(customers.data?.content ?? []).map((customer) => <MenuItem key={customer.id} value={customer.id}>{customer.name}{customer.phone ? ` · ${customer.phone}` : ''}</MenuItem>)}</Select></FormControl>
+          {!currentSale && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <FormControl fullWidth><InputLabel id="product-label">สินค้า</InputLabel><Select label="สินค้า" labelId="product-label" value={productId} onChange={(event) => setProductId(event.target.value)}>{(products.data?.content ?? []).map((product) => <MenuItem key={product.id} value={product.id}>{product.sku} · {product.name} · {money(product.salePrice)}</MenuItem>)}</Select></FormControl>
             <TextField label="จำนวน" type="number" value={quantity} onChange={(event) => setQuantity(event.target.value)} slotProps={{ htmlInput: { min: 1, step: 1 } }} sx={{ width: { sm: 130 } }} />
             <Button disabled={!productId} onClick={addItem} startIcon={<AddShoppingCartOutlinedIcon />} variant="outlined">เพิ่ม</Button>
           </Stack>}
           <Table size="small"><TableHead><TableRow><TableCell>สินค้า</TableCell><TableCell align="right">จำนวน</TableCell><TableCell align="right">ราคา/หน่วย</TableCell><TableCell align="right">รวม</TableCell></TableRow></TableHead><TableBody>
-            {(sale?.items ?? cart.map((line) => ({ ...line, sku: productMap.get(line.productId)?.sku ?? '', name: productMap.get(line.productId)?.name ?? '', unitPrice: productMap.get(line.productId)?.salePrice ?? 0, lineTotal: (productMap.get(line.productId)?.salePrice ?? 0) * line.quantity, unitCostSnapshot: null }))).map((line) => <TableRow key={line.productId}><TableCell>{line.sku} · {line.name}</TableCell><TableCell align="right">{line.quantity}</TableCell><TableCell align="right">{money(line.unitPrice)}</TableCell><TableCell align="right">{money(line.lineTotal)}</TableCell></TableRow>)}
+            {(currentSale?.items ?? cart.map((line) => ({ ...line, sku: productMap.get(line.productId)?.sku ?? '', name: productMap.get(line.productId)?.name ?? '', unitPrice: productMap.get(line.productId)?.salePrice ?? 0, lineTotal: (productMap.get(line.productId)?.salePrice ?? 0) * line.quantity, unitCostSnapshot: null }))).map((line) => <TableRow key={line.productId}><TableCell>{line.sku} · {line.name}</TableCell><TableCell align="right">{line.quantity}</TableCell><TableCell align="right">{money(line.unitPrice)}</TableCell><TableCell align="right">{money(line.lineTotal)}</TableCell></TableRow>)}
           </TableBody></Table>
-          {!sale && <Button disabled={!cart.length || create.isPending} onClick={() => create.mutate({ customerId: customerId || null, items: cart })} variant="contained">สร้างบิลและยืนยันราคา</Button>}
+          {!currentSale && <Button disabled={!cart.length || create.isPending} onClick={() => create.mutate({ customerId: customerId || null, items: cart })} variant="contained">สร้างบิลและยืนยันราคา</Button>}
         </Stack>
       </Paper>
       <Paper variant="outlined" sx={{ borderRadius: 3, p: 3, width: { xs: '100%', lg: 360 } }}><Stack spacing={2}>
         <Typography variant="h6">สรุปยอด</Typography>
-        <AmountRow label="ยอดสินค้า" value={sale?.subtotal ?? cart.reduce((sum, line) => sum + (productMap.get(line.productId)?.salePrice ?? 0) * line.quantity, 0)} />
-        {sale && <><AmountRow label="ส่วนลด" value={-sale.discountAmount} /><AmountRow label={`VAT ${sale.vatEnabled ? `${sale.vatRate}% (รวมในราคา)` : 'ปิด'}`} value={sale.vatAmount} /><Divider /><AmountRow strong label="ยอดสุทธิ" value={sale.total} /></>}
-        {sale && <><Button onClick={() => setDiscountOpen(true)} variant="outlined">ขออนุมัติส่วนลด</Button><TextField label="รับเงินสด" type="number" value={cashReceived} onChange={(event) => setCashReceived(event.target.value)} slotProps={{ htmlInput: { min: sale.total, step: '0.01' } }} /><Button disabled={!cashReceived || checkout.isPending} onClick={() => checkout.mutate({ saleId: sale.id, cash: cashReceived })} variant="contained">ชำระเงินสด</Button></>}
+        <AmountRow label="ยอดสินค้า" value={currentSale?.subtotal ?? cart.reduce((sum, line) => sum + (productMap.get(line.productId)?.salePrice ?? 0) * line.quantity, 0)} />
+        {currentSale && <><AmountRow label="ส่วนลด" value={-currentSale.discountAmount} /><AmountRow label={`VAT ${currentSale.vatEnabled ? `${currentSale.vatRate}% (รวมในราคา)` : 'ปิด'}`} value={currentSale.vatAmount} /><Divider /><AmountRow strong label="ยอดสุทธิ" value={currentSale.total} /></>}
+        {currentSale && !promptPay && <><Button onClick={() => setDiscountOpen(true)} variant="outlined">ขออนุมัติส่วนลด</Button><TextField label="รับเงินสด" type="number" value={cashReceived} onChange={(event) => setCashReceived(event.target.value)} slotProps={{ htmlInput: { min: currentSale.total, step: '0.01' } }} /><Button disabled={!cashReceived || checkout.isPending} onClick={() => checkout.mutate({ saleId: currentSale.id, cash: cashReceived })} variant="contained">ชำระเงินสด</Button><Divider>หรือ</Divider><Button disabled={promptPayCheckout.isPending} onClick={() => promptPayCheckout.mutate(currentSale.id)} startIcon={<QrCode2OutlinedIcon />} variant="outlined">ชำระด้วย PromptPay</Button></>}
+        {promptPay && <PromptPayPanel payment={promptPay} saleStatus={currentSale?.status ?? 'AWAITING_PAYMENT'} />}
       </Stack></Paper>
     </Stack>
-    {sale && <DiscountDialog error={discount.error} loading={discount.isPending} onClose={() => setDiscountOpen(false)} onSubmit={(input) => discount.mutate({ saleId: sale.id, input })} open={discountOpen} />}
+    {currentSale && <DiscountDialog error={discount.error} loading={discount.isPending} onClose={() => setDiscountOpen(false)} onSubmit={(input) => discount.mutate({ saleId: currentSale.id, input })} open={discountOpen} />}
+  </Stack>
+}
+
+function PromptPayPanel({ payment, saleStatus }: { payment: PromptPayPayment; saleStatus: Sale['status'] }) {
+  const expired = saleStatus === 'EXPIRED'
+  return <Stack spacing={2} sx={{ alignItems: 'center' }}>
+    <Alert severity={expired ? 'warning' : 'info'} sx={{ width: '100%' }}>
+      {expired ? 'QR หมดอายุแล้ว สต็อกที่จองถูกคืนอัตโนมัติ' : 'กำลังรอ Stripe webhook ยืนยันการชำระเงิน'}
+    </Alert>
+    {!expired && payment.qrCodeImageUrl && <Box alt="QR PromptPay" component="img" src={payment.qrCodeImageUrl} sx={{ maxWidth: 240, width: '100%' }} />}
+    <Typography sx={{ fontWeight: 700 }}>{money(payment.amount)}</Typography>
+    <Typography color="text.secondary" variant="body2">QR ใช้ได้ถึง {new Date(payment.expiresAt).toLocaleTimeString('th-TH')}</Typography>
+    <Typography color="text.secondary" variant="caption">ห้ามปิดบิลจากภาพหน้าจอ ระบบจะเชื่อผลจาก webhook เท่านั้น</Typography>
   </Stack>
 }
 
@@ -103,11 +130,11 @@ function DiscountDialog({ error, loading, onClose, onSubmit, open }: { error: Er
   return <Dialog fullWidth maxWidth="sm" onClose={onClose} open={open}><Box component="form" onSubmit={submit}><DialogTitle>ผู้จัดการอนุมัติส่วนลด</DialogTitle><DialogContent><Stack spacing={2} sx={{ pt: 1 }}>{error && <Alert severity="error">อนุมัติไม่สำเร็จ กรุณาตรวจ username/PIN</Alert>}<FormControl><InputLabel id="discount-type">รูปแบบส่วนลด</InputLabel><Select label="รูปแบบส่วนลด" labelId="discount-type" value={type} onChange={(event) => setType(event.target.value as DiscountType)}><MenuItem value="AMOUNT">จำนวนเงิน (บาท)</MenuItem><MenuItem value="PERCENT">เปอร์เซ็นต์</MenuItem></Select></FormControl><TextField label="ค่าส่วนลด" name="value" required type="number" slotProps={{ htmlInput: { min: 0, step: '0.01' } }} /><TextField label="ชื่อผู้ใช้ผู้จัดการ" name="managerUsername" required /><TextField label="Manager PIN" name="managerPin" required type="password" slotProps={{ htmlInput: { inputMode: 'numeric', pattern: '[0-9]{4,6}' } }} /></Stack></DialogContent><DialogActions><Button onClick={onClose}>ยกเลิก</Button><Button disabled={loading} type="submit" variant="contained">อนุมัติ</Button></DialogActions></Box></Dialog>
 }
 
-function Receipt({ onNewSale, sale, settings }: { onNewSale: () => void; sale: Sale; settings?: { storeName: string; receiptFooter: string | null } }) {
+function Receipt({ onNewSale, paymentMethod, sale, settings }: { onNewSale: () => void; paymentMethod: 'CASH' | 'PROMPTPAY'; sale: Sale; settings?: { storeName: string; receiptFooter: string | null } }) {
   return <Stack spacing={3} sx={{ alignItems: 'center' }}>
     <GlobalStyles styles={{ '@media print': { 'body *': { visibility: 'hidden' }, '.print-receipt, .print-receipt *': { visibility: 'visible' }, '.no-print': { display: 'none !important' } } }} />
     <Paper className="print-receipt" elevation={0} sx={{ '@media print': { border: 0, left: 0, position: 'absolute', top: 0, width: '80mm' }, border: 1, borderColor: 'divider', maxWidth: 560, p: 4, width: '100%' }}>
-      <Stack spacing={1}><Typography align="center" variant="h5">{settings?.storeName ?? 'Retail POS'}</Typography><Typography align="center">ใบเสร็จรับเงิน</Typography><Typography align="center" color="text.secondary" variant="caption">ไม่ใช่ใบกำกับภาษี</Typography><Divider /><Typography>เลขที่: {sale.receiptNumber}</Typography><Typography>วันที่: {sale.completedAt ? new Date(sale.completedAt).toLocaleString('th-TH') : '—'}</Typography>{sale.items.map((item) => <Stack direction="row" key={item.productId} sx={{ justifyContent: 'space-between' }}><Typography>{item.name} × {item.quantity}</Typography><Typography>{money(item.lineTotal)}</Typography></Stack>)}<Divider /><AmountRow label="ยอดสินค้า" value={sale.subtotal} /><AmountRow label="ส่วนลด" value={-sale.discountAmount} />{sale.vatEnabled && <AmountRow label={`VAT ${sale.vatRate}% (รวมในราคา)`} value={sale.vatAmount} />}<AmountRow strong label="ยอดสุทธิ" value={sale.total} /><AmountRow label="รับเงิน" value={sale.cashReceived ?? 0} /><AmountRow label="เงินทอน" value={sale.changeAmount ?? 0} />{settings?.receiptFooter && <Typography align="center" sx={{ pt: 2 }}>{settings.receiptFooter}</Typography>}</Stack>
+      <Stack spacing={1}><Typography align="center" variant="h5">{settings?.storeName ?? 'Retail POS'}</Typography><Typography align="center">ใบเสร็จรับเงิน</Typography><Typography align="center" color="text.secondary" variant="caption">ไม่ใช่ใบกำกับภาษี</Typography><Divider /><Typography>เลขที่: {sale.receiptNumber}</Typography><Typography>วันที่: {sale.completedAt ? new Date(sale.completedAt).toLocaleString('th-TH') : '—'}</Typography>{sale.items.map((item) => <Stack direction="row" key={item.productId} sx={{ justifyContent: 'space-between' }}><Typography>{item.name} × {item.quantity}</Typography><Typography>{money(item.lineTotal)}</Typography></Stack>)}<Divider /><AmountRow label="ยอดสินค้า" value={sale.subtotal} /><AmountRow label="ส่วนลด" value={-sale.discountAmount} />{sale.vatEnabled && <AmountRow label={`VAT ${sale.vatRate}% (รวมในราคา)`} value={sale.vatAmount} />}<AmountRow strong label="ยอดสุทธิ" value={sale.total} /><Typography>ชำระโดย: {paymentMethod === 'PROMPTPAY' ? 'PromptPay' : 'เงินสด'}</Typography>{paymentMethod === 'CASH' && <><AmountRow label="รับเงิน" value={sale.cashReceived ?? 0} /><AmountRow label="เงินทอน" value={sale.changeAmount ?? 0} /></>}{settings?.receiptFooter && <Typography align="center" sx={{ pt: 2 }}>{settings.receiptFooter}</Typography>}</Stack>
     </Paper>
     <Stack className="no-print" direction="row" spacing={2}><Button onClick={() => window.print()} startIcon={<PrintOutlinedIcon />} variant="contained">พิมพ์ใบเสร็จ</Button><Button onClick={onNewSale} variant="outlined">เริ่มบิลใหม่</Button></Stack>
   </Stack>
