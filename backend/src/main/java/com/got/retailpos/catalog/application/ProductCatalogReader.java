@@ -8,6 +8,6 @@ public interface ProductCatalogReader {
 
 	Map<UUID, CatalogProduct> findActiveProducts(Collection<UUID> productIds);
 
-	record CatalogProduct(UUID id, String sku, String name) {
+	record CatalogProduct(UUID id, String sku, String name, java.math.BigDecimal salePrice) {
 	}
 }

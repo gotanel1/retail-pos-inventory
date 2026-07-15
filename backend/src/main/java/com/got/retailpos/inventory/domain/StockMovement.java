@@ -134,6 +134,12 @@ public class StockMovement {
 				occurredAt);
 	}
 
+	public static StockMovement sale(UUID productId, int quantity, InventoryBalance balance, UUID saleId,
+			UUID actorUserId, Instant occurredAt) {
+		return new StockMovement(productId, MovementType.SALE, -quantity, balance.getOnHand(), balance.getReserved(),
+				balance.getAverageCost(), balance.getAverageCost(), "SALE", saleId, null, actorUserId, occurredAt);
+	}
+
 	public UUID getId() { return id; }
 	public UUID getProductId() { return productId; }
 	public MovementType getMovementType() { return movementType; }

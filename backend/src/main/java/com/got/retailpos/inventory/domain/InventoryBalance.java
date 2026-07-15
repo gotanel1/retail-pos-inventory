@@ -55,6 +55,13 @@ public class InventoryBalance {
 		updatedAt = Instant.now();
 	}
 
+	public void sell(int quantity) {
+		if (quantity <= 0) throw new IllegalArgumentException("จำนวนขายต้องมากกว่าศูนย์");
+		if (getAvailable() < quantity) throw new IllegalArgumentException("สต็อกพร้อมขายไม่เพียงพอ");
+		onHand = Math.subtractExact(onHand, quantity);
+		updatedAt = Instant.now();
+	}
+
 	public UUID getProductId() {
 		return productId;
 	}

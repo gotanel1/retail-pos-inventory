@@ -60,7 +60,7 @@ public class ProductCatalogService implements ProductCatalogReader {
 		return productRepository.findAllByIdInAndActiveTrue(productIds).stream()
 				.collect(java.util.stream.Collectors.toUnmodifiableMap(
 						Product::getId,
-						product -> new CatalogProduct(product.getId(), product.getSku(), product.getName())));
+						product -> new CatalogProduct(product.getId(), product.getSku(), product.getName(), product.getSalePrice())));
 	}
 
 	@Transactional

@@ -39,6 +39,9 @@ public class UserAccount {
 	@Column(name = "updated_at", nullable = false)
 	private Instant updatedAt;
 
+	@Column(name = "manager_pin_hash", length = 100)
+	private String managerPinHash;
+
 	protected UserAccount() {
 	}
 
@@ -80,5 +83,14 @@ public class UserAccount {
 
 	public boolean isActive() {
 		return active;
+	}
+
+	public String getManagerPinHash() {
+		return managerPinHash;
+	}
+
+	public void configureManagerPin(String managerPinHash) {
+		this.managerPinHash = managerPinHash;
+		this.updatedAt = Instant.now();
 	}
 }
