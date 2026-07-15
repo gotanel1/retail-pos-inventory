@@ -17,6 +17,7 @@ import com.got.retailpos.identity.security.InvalidCredentialsException;
 import com.got.retailpos.catalog.application.CatalogConflictException;
 import com.got.retailpos.catalog.application.InvalidCsvException;
 import com.got.retailpos.inventory.application.InventoryConflictException;
+import com.got.retailpos.customers.application.CustomerConflictException;
 import com.got.retailpos.shared.application.ResourceNotFoundException;
 
 @RestControllerAdvice
@@ -46,6 +47,11 @@ public class ApiExceptionHandler {
 	@ExceptionHandler(InventoryConflictException.class)
 	ProblemDetail handleInventoryConflict(InventoryConflictException exception) {
 		return problem(HttpStatus.CONFLICT, "ข้อมูลสต็อกขัดแย้ง", exception.getMessage());
+	}
+
+	@ExceptionHandler(CustomerConflictException.class)
+	ProblemDetail handleCustomerConflict(CustomerConflictException exception) {
+		return problem(HttpStatus.CONFLICT, "ข้อมูลลูกค้าซ้ำ", exception.getMessage());
 	}
 
 	@ExceptionHandler(ResourceNotFoundException.class)

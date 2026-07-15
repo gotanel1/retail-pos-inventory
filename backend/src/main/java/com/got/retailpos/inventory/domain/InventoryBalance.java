@@ -46,6 +46,15 @@ public class InventoryBalance {
 		this.updatedAt = Instant.now();
 	}
 
+	public void adjust(int quantityDelta) {
+		var newOnHand = Math.addExact(onHand, quantityDelta);
+		if (newOnHand < 0 || newOnHand < reserved) {
+			throw new IllegalArgumentException("Adjustment ทำให้สต็อกติดลบหรือต่ำกว่ายอดจอง");
+		}
+		onHand = newOnHand;
+		updatedAt = Instant.now();
+	}
+
 	public UUID getProductId() {
 		return productId;
 	}
