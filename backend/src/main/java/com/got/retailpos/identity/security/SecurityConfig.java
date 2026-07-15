@@ -1,6 +1,7 @@
 package com.got.retailpos.identity.security;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -19,11 +19,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.session.ChangeSessionIdAuthenticationStrategy;
+import org.springframework.security.web.authentication.session.CompositeSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CsrfAuthenticationStrategy;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
 import com.got.retailpos.identity.infrastructure.UserAccountRepository;
 
@@ -36,12 +40,13 @@ public class SecurityConfig {
 	@Bean
 	SecurityFilterChain securityFilterChain(
 			HttpSecurity http,
-			SecurityContextRepository securityContextRepository) throws Exception {
+			SecurityContextRepository securityContextRepository,
+			CsrfTokenRepository csrfTokenRepository) throws Exception {
 		http
 				.securityContext(context -> context
 						.securityContextRepository(securityContextRepository)
 						.requireExplicitSave(true))
-				.csrf(Customizer.withDefaults())
+				.csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository))
 				.authorizeHttpRequests(authorize -> authorize
 						.requestMatchers(HttpMethod.GET,
 								"/", "/index.html", "/assets/**", "/favicon.ico",
@@ -94,8 +99,15 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	SessionAuthenticationStrategy sessionAuthenticationStrategy() {
-		return new ChangeSessionIdAuthenticationStrategy();
+	CsrfTokenRepository csrfTokenRepository() {
+		return new HttpSessionCsrfTokenRepository();
+	}
+
+	@Bean
+	SessionAuthenticationStrategy sessionAuthenticationStrategy(CsrfTokenRepository csrfTokenRepository) {
+		return new CompositeSessionAuthenticationStrategy(List.of(
+				new ChangeSessionIdAuthenticationStrategy(),
+				new CsrfAuthenticationStrategy(csrfTokenRepository)));
 	}
 
 	private void writeProblem(

@@ -1,6 +1,7 @@
 package com.got.retailpos.identity;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -18,6 +19,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
+
+import com.jayway.jsonpath.JsonPath;
 
 import com.got.retailpos.TestcontainersConfiguration;
 import com.got.retailpos.identity.application.UserAccountService;
@@ -70,6 +73,32 @@ class AuthIntegrationTests {
 		mockMvc.perform(get("/api/v1/auth/me").session(session))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.displayName", is("เจ้าของร้าน")));
+	}
+
+	@Test
+	void shouldAcceptEndpointCsrfTokenAndRotateItAfterLogin() throws Exception {
+		userAccountService.create("owner", "correct-password", "เจ้าของร้าน", Role.OWNER);
+		var csrfResult = mockMvc.perform(get("/api/v1/auth/csrf"))
+				.andExpect(status().isOk())
+				.andReturn();
+		var session = (MockHttpSession) csrfResult.getRequest().getSession(false);
+		String tokenBeforeLogin = JsonPath.read(csrfResult.getResponse().getContentAsString(), "$.token");
+
+		var loginResult = mockMvc.perform(post("/api/v1/auth/login")
+				.session(session)
+				.header("X-CSRF-TOKEN", tokenBeforeLogin)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(loginBody("owner", "correct-password")))
+				.andExpect(status().isOk())
+				.andReturn();
+		var authenticatedSession = (MockHttpSession) loginResult.getRequest().getSession(false);
+
+		var refreshedCsrfResult = mockMvc.perform(get("/api/v1/auth/csrf").session(authenticatedSession))
+				.andExpect(status().isOk())
+				.andReturn();
+		String tokenAfterLogin = JsonPath.read(refreshedCsrfResult.getResponse().getContentAsString(), "$.token");
+
+		assertNotEquals(tokenBeforeLogin, tokenAfterLogin);
 	}
 
 	@Test
