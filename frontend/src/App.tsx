@@ -15,6 +15,7 @@ const StockCountPage = lazy(() => import('./features/inventory/StockCountPage').
 const CustomerPage = lazy(() => import('./features/customers/CustomerPage').then((module) => ({ default: module.CustomerPage })))
 const PosPage = lazy(() => import('./features/sales/PosPage').then((module) => ({ default: module.PosPage })))
 const SettingsPage = lazy(() => import('./features/sales/SettingsPage').then((module) => ({ default: module.SettingsPage })))
+const ReportingPage = lazy(() => import('./features/reporting/ReportingPage').then((module) => ({ default: module.ReportingPage })))
 
 const currentUserQueryKey = ['current-user'] as const
 
@@ -80,6 +81,7 @@ export function App() {
           <Route path="/customers" element={user.role !== 'INVENTORY_STAFF' ? <CustomerPage role={user.role} /> : <Navigate replace to="/" />} />
           <Route path="/pos" element={user.role !== 'INVENTORY_STAFF' ? <PosPage /> : <Navigate replace to="/" />} />
           <Route path="/settings" element={['OWNER', 'MANAGER'].includes(user.role) ? <SettingsPage role={user.role} /> : <Navigate replace to="/" />} />
+          <Route path="/reports" element={['OWNER', 'MANAGER'].includes(user.role) ? <ReportingPage /> : <Navigate replace to="/" />} />
           <Route path="*" element={<Navigate replace to="/" />} />
         </Routes>
       </Suspense>
