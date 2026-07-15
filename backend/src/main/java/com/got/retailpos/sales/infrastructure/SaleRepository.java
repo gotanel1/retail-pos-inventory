@@ -5,4 +5,5 @@ public interface SaleRepository extends JpaRepository<Sale,UUID>{
 	@EntityGraph(attributePaths="items") Optional<Sale> findByCheckoutIdempotencyKey(String key);
 	@Lock(LockModeType.PESSIMISTIC_WRITE) @EntityGraph(attributePaths="items") @Query("select sale from Sale sale where sale.id=:id") Optional<Sale> findByIdForUpdate(@Param("id") UUID id);
 	Page<Sale> findAllBy(Pageable pageable);
+	Page<Sale> findAllByCustomerIdAndStatus(UUID customerId,com.got.retailpos.sales.domain.SaleStatus status,Pageable pageable);
 }

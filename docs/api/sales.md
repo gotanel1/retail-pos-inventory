@@ -58,3 +58,7 @@ Conflicting sale state or reused idempotency data returns `application/problem+j
 - `POST /api/v1/auth/manager-pin`: `OWNER` or `MANAGER`, requires the user's current password
 
 Store VAT settings are copied into new sales. Updating settings never changes historical receipts.
+
+## Customer purchase history
+
+`GET /api/v1/customers/{customerId}/sales?page=0&size=20&sort=completedAt,desc` returns completed sales only. Draft or failed checkouts are excluded from customer history.

@@ -12,11 +12,19 @@ describe('Stock count and customer pages', () => {
   afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
   it('ซ่อน anonymize จาก Cashier แต่ยังให้เพิ่มลูกค้าได้', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(page([{ id: 'c1', name: 'สมชาย', phone: '0812345678', note: null, marketingConsent: false, consentUpdatedAt: '2026-07-15T10:00:00Z', active: true, anonymizedAt: null }])))
+    vi.mocked(fetch).mockImplementation(async (input) => {
+      const url = input.toString()
+      if (url.includes('/customers?')) return jsonResponse(page([{ id: 'c1', name: 'สมชาย', phone: '0812345678', note: null, marketingConsent: false, consentUpdatedAt: '2026-07-15T10:00:00Z', active: true, anonymizedAt: null }]))
+      if (url.includes('/customers/c1/sales?')) return jsonResponse(page([{ id: 's1', receiptNumber: 'R-000001', status: 'COMPLETED', completedAt: '2026-07-15T10:00:00Z', total: 107, items: [] }]))
+      throw new Error(`unexpected ${url}`)
+    })
+    const user = userEvent.setup()
     renderPage(<CustomerPage role="CASHIER" />)
     expect(await screen.findByText('สมชาย')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'เพิ่มลูกค้า' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Anonymize' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'ประวัติซื้อ' }))
+    expect(await screen.findByText('R-000001')).toBeInTheDocument()
   })
 
   it('ให้ Manager อนุมัติ Count ที่รอพิจารณา', async () => {
