@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -12,6 +13,7 @@ import com.got.retailpos.identity.application.UserAccountService;
 import com.got.retailpos.identity.domain.Role;
 
 @Component
+@Order(0)
 @EnableConfigurationProperties(BootstrapOwnerProperties.class)
 public class BootstrapOwnerInitializer implements ApplicationRunner {
 

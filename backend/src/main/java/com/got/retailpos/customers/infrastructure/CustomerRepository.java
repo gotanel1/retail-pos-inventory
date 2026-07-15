@@ -1,6 +1,7 @@
 package com.got.retailpos.customers.infrastructure;
 
 import java.util.UUID;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,8 @@ import com.got.retailpos.customers.domain.Customer;
 public interface CustomerRepository extends JpaRepository<Customer, UUID> {
 
 	boolean existsByNormalizedPhone(String normalizedPhone);
+
+	Optional<Customer> findByNormalizedPhone(String normalizedPhone);
 
 	boolean existsByNormalizedPhoneAndIdNot(String normalizedPhone, UUID id);
 

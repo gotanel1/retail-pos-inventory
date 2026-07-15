@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.UUID;
 import java.util.List;
 import java.util.Set;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,8 @@ import com.got.retailpos.catalog.domain.Product;
 public interface ProductRepository extends JpaRepository<Product, UUID> {
 
 	boolean existsBySkuIgnoreCase(String sku);
+
+	Optional<Product> findBySkuIgnoreCase(String sku);
 
 	boolean existsByBarcode(String barcode);
 
