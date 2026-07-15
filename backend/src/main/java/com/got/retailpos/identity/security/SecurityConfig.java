@@ -46,7 +46,7 @@ public class SecurityConfig {
 				.securityContext(context -> context
 						.securityContextRepository(securityContextRepository)
 						.requireExplicitSave(true))
-				.csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository))
+				.csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository).ignoringRequestMatchers("/api/v1/payments/stripe/webhook"))
 				.authorizeHttpRequests(authorize -> authorize
 						.requestMatchers(HttpMethod.GET,
 								"/", "/index.html", "/assets/**", "/favicon.ico",
@@ -54,6 +54,7 @@ public class SecurityConfig {
 								"/api/v1/auth/csrf")
 						.permitAll()
 						.requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+						.requestMatchers(HttpMethod.POST, "/api/v1/payments/stripe/webhook").permitAll()
 						.anyRequest().authenticated())
 				.exceptionHandling(exceptions -> exceptions
 						.authenticationEntryPoint((request, response, exception) ->
