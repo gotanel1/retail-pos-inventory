@@ -75,6 +75,10 @@ export function getProducts(search: string, page: number) {
   return apiRequest<ProductPage>(`/products?${params.toString()}`)
 }
 
+export function getProductOptions() {
+  return apiRequest<ProductPage>('/products?page=0&size=200&sort=name,asc')
+}
+
 export function createProduct(input: CreateProductInput) {
   return apiRequest<Product>('/products', {
     method: 'POST',

@@ -9,6 +9,8 @@ import { LoginPage } from './features/auth/LoginPage'
 
 const ProductPage = lazy(() => import('./features/catalog/ProductPage').then((module) => ({ default: module.ProductPage })))
 const ProductImportPage = lazy(() => import('./features/catalog/ProductImportPage').then((module) => ({ default: module.ProductImportPage })))
+const InventoryPage = lazy(() => import('./features/inventory/InventoryPage').then((module) => ({ default: module.InventoryPage })))
+const GoodsReceiptPage = lazy(() => import('./features/inventory/GoodsReceiptPage').then((module) => ({ default: module.GoodsReceiptPage })))
 
 const currentUserQueryKey = ['current-user'] as const
 
@@ -68,6 +70,8 @@ export function App() {
           <Route path="/" element={<AuthenticatedHome />} />
           <Route path="/products" element={<ProductPage role={user.role} />} />
           <Route path="/products/import" element={canImport ? <ProductImportPage /> : <Navigate replace to="/products" />} />
+          <Route path="/inventory" element={<InventoryPage />} />
+          <Route path="/goods-receipts" element={canImport ? <GoodsReceiptPage /> : <Navigate replace to="/inventory" />} />
           <Route path="*" element={<Navigate replace to="/" />} />
         </Routes>
       </Suspense>
