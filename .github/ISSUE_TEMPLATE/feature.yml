@@ -1,0 +1,34 @@
+name: Feature
+description: เสนอฟีเจอร์หรือ vertical slice ใหม่
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: ปัญหาที่ต้องแก้
+      description: ผู้ใช้พบปัญหาอะไร และเหตุใดจึงสำคัญ
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: ขอบเขต
+      description: ระบุสิ่งที่อยู่ในและไม่อยู่ในงานนี้
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: เงื่อนไขที่ตรวจสอบได้ว่างานเสร็จแล้ว
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: การทดสอบที่ต้องมี
+      description: Unit, integration, security หรือ E2E ที่เกี่ยวข้อง
+    validations:
+      required: true
