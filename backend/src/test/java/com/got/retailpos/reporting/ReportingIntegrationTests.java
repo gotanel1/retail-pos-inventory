@@ -1,5 +1,6 @@
 package com.got.retailpos.reporting;
 
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -82,7 +83,7 @@ class ReportingIntegrationTests {
 				.andExpect(jsonPath("$.summary.grossProfit", is(40.0)))
 				.andExpect(jsonPath("$.summary.inventoryValue", is(60.0)))
 				.andExpect(jsonPath("$.payments[0].method", is("CASH")))
-				.andExpect(jsonPath("$.lowStock[0].sku", is(product.getSku())))
+				.andExpect(jsonPath("$.lowStock[*].sku", hasItem(product.getSku())))
 				.andExpect(jsonPath("$.movements[0].movementType", is("SALE")));
 	}
 

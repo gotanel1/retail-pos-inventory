@@ -49,6 +49,10 @@ sequenceDiagram
 
 Controllers remain thin. Business invariants belong in domain/application services, and the database provides the final concurrency and integrity boundary.
 
+Reporting is the deliberate exception to aggregate-oriented persistence: read-only dashboards use explicit SQL projections across module-owned tables. They never mutate another module's state, while commands such as checkout and stock adjustment still cross modules through application services inside a transaction.
+
 ## Production artifact
 
 The Docker build compiles React first, copies the static output into Spring Boot resources, packages one executable JAR, and runs it as a non-root user on a Java 21 JRE. This keeps browser requests same-origin and avoids maintaining separate frontend and backend deployments for the first release.
+
+The production demo Blueprint deploys this image with a private PostgreSQL 18 database. Secrets remain environment variables, Flyway owns schema evolution, and `/actuator/health` is the deployment health check.
