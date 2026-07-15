@@ -3,6 +3,8 @@ import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
 import PeopleOutlineOutlinedIcon from '@mui/icons-material/PeopleOutlineOutlined'
 import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined'
+import PointOfSaleOutlinedIcon from '@mui/icons-material/PointOfSaleOutlined'
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import {
@@ -40,7 +42,9 @@ export function AuthenticatedShell({ children, user, isLoggingOut, onLogout }: A
     { label: 'หน้าหลัก', path: '/', icon: <HomeOutlinedIcon fontSize="small" /> },
     { label: 'สินค้า', path: '/products', icon: <Inventory2OutlinedIcon fontSize="small" /> },
     { label: 'ยอดสต็อก', path: '/inventory', icon: <Inventory2OutlinedIcon fontSize="small" /> },
+    ...(user.role !== 'INVENTORY_STAFF' ? [{ label: 'ขายหน้าร้าน', path: '/pos', icon: <PointOfSaleOutlinedIcon fontSize="small" /> }] : []),
     ...(user.role !== 'INVENTORY_STAFF' ? [{ label: 'ลูกค้า', path: '/customers', icon: <PeopleOutlineOutlinedIcon fontSize="small" /> }] : []),
+    ...(['OWNER', 'MANAGER'].includes(user.role) ? [{ label: 'ตั้งค่า', path: '/settings', icon: <SettingsOutlinedIcon fontSize="small" /> }] : []),
     ...(catalogEditors.includes(user.role)
       ? [
           { label: 'นำเข้า CSV', path: '/products/import', icon: <UploadFileOutlinedIcon fontSize="small" /> },
