@@ -1,5 +1,6 @@
 import { apiRequest } from '../../api/http'
 import type { PageResponse } from '../inventory/inventoryApi'
+import type { Sale } from '../sales/salesApi'
 
 export interface Customer { id: string; name: string; phone: string | null; note: string | null; marketingConsent: boolean; consentUpdatedAt: string; active: boolean; anonymizedAt: string | null }
 export interface CustomerInput { name: string; phone: string; note: string; marketingConsent: boolean }
@@ -10,3 +11,4 @@ export function getCustomers(search = '') {
 }
 export function createCustomer(input: CustomerInput) { return apiRequest<Customer>('/customers', { method: 'POST', body: JSON.stringify(input) }) }
 export function anonymizeCustomer(id: string) { return apiRequest<void>(`/customers/${id}`, { method: 'DELETE' }) }
+export function getCustomerSales(id: string) { return apiRequest<PageResponse<Sale>>(`/customers/${id}/sales?page=0&size=20&sort=completedAt,desc`) }

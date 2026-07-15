@@ -13,7 +13,7 @@ import com.got.retailpos.customers.infrastructure.CustomerRepository;
 import com.got.retailpos.shared.application.ResourceNotFoundException;
 
 @Service
-public class CustomerService {
+public class CustomerService implements CustomerReader {
 
 	private final CustomerRepository repository;
 
@@ -28,6 +28,9 @@ public class CustomerService {
 	public Customer findById(UUID id) {
 		return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("ลูกค้า"));
 	}
+
+	@Override @Transactional(readOnly = true)
+	public boolean isActiveCustomer(UUID id) { return repository.findById(id).map(Customer::isActive).orElse(false); }
 
 	@Transactional
 	public Customer create(CustomerInput input) {

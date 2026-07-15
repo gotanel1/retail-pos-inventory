@@ -53,7 +53,7 @@ Backend integration tests use Testcontainers and therefore require Docker Deskto
 
 ## Product status
 
-Foundation, RBAC, catalog/CSV, immutable stock ledger, goods receipts, approved stock counts, and customer anonymization are implemented. See [Project Charter](docs/product/project-charter.md) and the API guides in `docs/api`.
+Foundation, RBAC, catalog/CSV, immutable stock ledger, goods receipts, approved stock counts, customer anonymization, and cash POS with inclusive-VAT snapshots are implemented. Cash checkout includes idempotency, pessimistic stock locking, manager-approved discounts, and browser-print receipts. See [Project Charter](docs/product/project-charter.md) and the API guides in `docs/api`.
 
 ## License
 

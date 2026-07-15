@@ -18,6 +18,9 @@ import com.got.retailpos.catalog.application.CatalogConflictException;
 import com.got.retailpos.catalog.application.InvalidCsvException;
 import com.got.retailpos.inventory.application.InventoryConflictException;
 import com.got.retailpos.customers.application.CustomerConflictException;
+import com.got.retailpos.identity.application.InvalidManagerPinException;
+import com.got.retailpos.identity.application.ManagerPinRateLimitException;
+import com.got.retailpos.sales.application.SaleConflictException;
 import com.got.retailpos.shared.application.ResourceNotFoundException;
 
 @RestControllerAdvice
@@ -52,6 +55,21 @@ public class ApiExceptionHandler {
 	@ExceptionHandler(CustomerConflictException.class)
 	ProblemDetail handleCustomerConflict(CustomerConflictException exception) {
 		return problem(HttpStatus.CONFLICT, "ข้อมูลลูกค้าซ้ำ", exception.getMessage());
+	}
+
+	@ExceptionHandler(InvalidManagerPinException.class)
+	ProblemDetail handleInvalidManagerPin(InvalidManagerPinException exception) {
+		return problem(HttpStatus.FORBIDDEN, "อนุมัติส่วนลดไม่สำเร็จ", exception.getMessage());
+	}
+
+	@ExceptionHandler(ManagerPinRateLimitException.class)
+	ProblemDetail handleManagerPinRateLimit(ManagerPinRateLimitException exception) {
+		return problem(HttpStatus.TOO_MANY_REQUESTS, "Manager PIN ถูกระงับชั่วคราว", exception.getMessage());
+	}
+
+	@ExceptionHandler(SaleConflictException.class)
+	ProblemDetail handleSaleConflict(SaleConflictException exception) {
+		return problem(HttpStatus.CONFLICT, "สถานะบิลขัดแย้ง", exception.getMessage());
 	}
 
 	@ExceptionHandler(ResourceNotFoundException.class)
