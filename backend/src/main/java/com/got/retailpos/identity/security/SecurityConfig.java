@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -40,7 +41,7 @@ public class SecurityConfig {
 				.securityContext(context -> context
 						.securityContextRepository(securityContextRepository)
 						.requireExplicitSave(true))
-				.csrf(csrf -> csrf.spa())
+				.csrf(Customizer.withDefaults())
 				.authorizeHttpRequests(authorize -> authorize
 						.requestMatchers(HttpMethod.GET,
 								"/", "/index.html", "/assets/**", "/favicon.ico",
