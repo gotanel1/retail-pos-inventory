@@ -16,6 +16,7 @@ import com.got.retailpos.identity.application.UsernameAlreadyExistsException;
 import com.got.retailpos.identity.security.InvalidCredentialsException;
 import com.got.retailpos.catalog.application.CatalogConflictException;
 import com.got.retailpos.catalog.application.InvalidCsvException;
+import com.got.retailpos.inventory.application.InventoryConflictException;
 import com.got.retailpos.shared.application.ResourceNotFoundException;
 
 @RestControllerAdvice
@@ -40,6 +41,11 @@ public class ApiExceptionHandler {
 	@ExceptionHandler(InvalidCsvException.class)
 	ProblemDetail handleInvalidCsv(InvalidCsvException exception) {
 		return problem(HttpStatus.BAD_REQUEST, "ไฟล์ CSV ไม่ถูกต้อง", exception.getMessage());
+	}
+
+	@ExceptionHandler(InventoryConflictException.class)
+	ProblemDetail handleInventoryConflict(InventoryConflictException exception) {
+		return problem(HttpStatus.CONFLICT, "ข้อมูลสต็อกขัดแย้ง", exception.getMessage());
 	}
 
 	@ExceptionHandler(ResourceNotFoundException.class)

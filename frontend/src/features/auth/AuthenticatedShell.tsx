@@ -1,5 +1,6 @@
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import {
@@ -36,8 +37,12 @@ export function AuthenticatedShell({ children, user, isLoggingOut, onLogout }: A
   const links = [
     { label: 'หน้าหลัก', path: '/', icon: <HomeOutlinedIcon fontSize="small" /> },
     { label: 'สินค้า', path: '/products', icon: <Inventory2OutlinedIcon fontSize="small" /> },
+    { label: 'ยอดสต็อก', path: '/inventory', icon: <Inventory2OutlinedIcon fontSize="small" /> },
     ...(catalogEditors.includes(user.role)
-      ? [{ label: 'นำเข้า CSV', path: '/products/import', icon: <UploadFileOutlinedIcon fontSize="small" /> }]
+      ? [
+          { label: 'นำเข้า CSV', path: '/products/import', icon: <UploadFileOutlinedIcon fontSize="small" /> },
+          { label: 'รับสินค้า', path: '/goods-receipts', icon: <LocalShippingOutlinedIcon fontSize="small" /> },
+        ]
       : []),
   ]
 

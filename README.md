@@ -53,7 +53,7 @@ Backend integration tests use Testcontainers and therefore require Docker Deskto
 
 ## Product status
 
-Foundation, session-based RBAC, product catalog, and atomic CSV preview/import are implemented. See [Project Charter](docs/product/project-charter.md) for product boundaries, [Authentication API](docs/api/authentication.md), and [Catalog API](docs/api/catalog.md) for request examples.
+Foundation, session-based RBAC, product catalog, atomic CSV import, immutable stock ledger, and goods receipt costing are implemented. See [Project Charter](docs/product/project-charter.md), [Authentication API](docs/api/authentication.md), [Catalog API](docs/api/catalog.md), and [Inventory API](docs/api/inventory.md).
 
 ## License
 
