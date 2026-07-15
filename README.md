@@ -26,6 +26,8 @@ Copy `.env.example` to `.env`, change the local password, then start the complet
 docker compose up --build
 ```
 
+`APP_BOOTSTRAP_OWNER_PASSWORD` is required only when the database has no users. The application creates the first `OWNER` account, stores only its BCrypt hash, and skips bootstrap on later starts.
+
 Useful endpoints:
 
 - Application: `http://localhost:8080`
@@ -42,6 +44,7 @@ cd backend
 .\mvnw.cmd verify
 
 cd ..\frontend
+npm run lint
 npm test
 npm run build
 ```
@@ -50,7 +53,7 @@ Backend integration tests use Testcontainers and therefore require Docker Deskto
 
 ## Product status
 
-Foundation development is in progress. See [Project Charter](docs/product/project-charter.md) for the product boundaries and acceptance criteria.
+Foundation and session-based RBAC are implemented. See [Project Charter](docs/product/project-charter.md) for product boundaries and [Authentication API](docs/api/authentication.md) for request examples.
 
 ## License
 

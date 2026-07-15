@@ -38,3 +38,4 @@ GitHub Actions แยก backend กับ frontend เป็นคนละ job
 - Testcontainers ล้มครั้งแรกเพราะ Docker daemon ไม่ทำงาน ไม่ใช่เพราะ application code
 - TypeScript strict build ตรวจพบ Material UI 9 API change แม้ component test จะผ่าน จึงต้องรันทั้ง test และ production build
 - Dependency และ container image ควร pin version เช่น `postgres:18.4` แทน `latest`
+- PostgreSQL official image ตั้งแต่ 18 เปลี่ยน volume root เป็น `/var/lib/postgresql` จึงห้ามใช้ path เดิม `/var/lib/postgresql/data`
