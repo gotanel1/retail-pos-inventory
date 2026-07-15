@@ -62,6 +62,26 @@ public class InventoryBalance {
 		updatedAt = Instant.now();
 	}
 
+	public void reserve(int quantity) {
+		if (quantity <= 0) throw new IllegalArgumentException("จำนวนจองต้องมากกว่าศูนย์");
+		if (getAvailable() < quantity) throw new IllegalArgumentException("สต็อกพร้อมขายไม่เพียงพอ");
+		reserved = Math.addExact(reserved, quantity);
+		updatedAt = Instant.now();
+	}
+
+	public void releaseReservation(int quantity) {
+		if (quantity <= 0 || reserved < quantity) throw new IllegalArgumentException("ยอดจองไม่ถูกต้อง");
+		reserved = Math.subtractExact(reserved, quantity);
+		updatedAt = Instant.now();
+	}
+
+	public void consumeReservation(int quantity) {
+		if (quantity <= 0 || reserved < quantity || onHand < quantity) throw new IllegalArgumentException("ยอดจองไม่เพียงพอสำหรับขาย");
+		reserved = Math.subtractExact(reserved, quantity);
+		onHand = Math.subtractExact(onHand, quantity);
+		updatedAt = Instant.now();
+	}
+
 	public UUID getProductId() {
 		return productId;
 	}

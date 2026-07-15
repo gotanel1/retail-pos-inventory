@@ -41,8 +41,22 @@ export interface StoreSettings {
   receiptFooter: string | null
 }
 
+export interface PromptPayPayment {
+  paymentId: string
+  saleId: string
+  amount: number
+  paymentIntentId: string
+  qrCodeImageUrl: string
+  expiresAt: string
+  status: 'PENDING'
+}
+
 export function getSales() {
   return apiRequest<PageResponse<Sale>>('/sales?page=0&size=20&sort=createdAt,desc')
+}
+
+export function getSale(saleId: string) {
+  return apiRequest<Sale>(`/sales/${saleId}`)
 }
 
 export function createSale(input: { customerId: string | null; items: { productId: string; quantity: number }[] }) {
@@ -58,6 +72,13 @@ export function checkoutCash(saleId: string, cashReceived: string, idempotencyKe
     method: 'POST',
     headers: { 'Idempotency-Key': idempotencyKey },
     body: JSON.stringify({ cashReceived }),
+  })
+}
+
+export function checkoutPromptPay(saleId: string, idempotencyKey: string) {
+  return apiRequest<PromptPayPayment>(`/sales/${saleId}/checkout/promptpay`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': idempotencyKey },
   })
 }
 

@@ -28,6 +28,14 @@ docker compose up --build
 
 `APP_BOOTSTRAP_OWNER_PASSWORD` is required only when the database has no users. The application creates the first `OWNER` account, stores only its BCrypt hash, and skips bootstrap on later starts.
 
+PromptPay requires Stripe Test Mode credentials. Set `STRIPE_SECRET_KEY=sk_test_...` and forward local webhooks with Stripe CLI:
+
+```powershell
+stripe listen --forward-to localhost:8080/api/v1/payments/stripe/webhook
+```
+
+Set `STRIPE_WEBHOOK_SECRET` to the `whsec_...` value printed by that command. Stripe Dashboard webhook secrets and Stripe CLI webhook secrets are different; use the secret from the endpoint that sends the event.
+
 Useful endpoints:
 
 - Application: `http://localhost:8080`
@@ -53,7 +61,7 @@ Backend integration tests use Testcontainers and therefore require Docker Deskto
 
 ## Product status
 
-Foundation, RBAC, catalog/CSV, immutable stock ledger, goods receipts, approved stock counts, customer anonymization, and cash POS with inclusive-VAT snapshots are implemented. Cash checkout includes idempotency, pessimistic stock locking, manager-approved discounts, and browser-print receipts. See [Project Charter](docs/product/project-charter.md) and the API guides in `docs/api`.
+Foundation, RBAC, catalog/CSV, immutable stock ledger, goods receipts, approved stock counts, customer anonymization, cash POS, and Stripe PromptPay Test Mode are implemented. Checkout includes idempotency, pessimistic stock locking, ten-minute PromptPay reservations, signed and deduplicated webhooks, inclusive-VAT snapshots, manager-approved discounts, and browser-print receipts. See [Project Charter](docs/product/project-charter.md) and the API guides in `docs/api`.
 
 ## License
 
