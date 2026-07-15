@@ -110,6 +110,30 @@ public class StockMovement {
 				occurredAt);
 	}
 
+	public static StockMovement adjustment(
+			UUID productId,
+			int quantityDelta,
+			InventoryBalance balance,
+			UUID countId,
+			String reason,
+			UUID actorUserId,
+			Instant occurredAt) {
+		if (quantityDelta == 0) throw new IllegalArgumentException("Adjustment ต้องเปลี่ยนยอดสต็อก");
+		return new StockMovement(
+				productId,
+				quantityDelta > 0 ? MovementType.ADJUSTMENT_IN : MovementType.ADJUSTMENT_OUT,
+				quantityDelta,
+				balance.getOnHand(),
+				balance.getReserved(),
+				null,
+				balance.getAverageCost(),
+				"INVENTORY_COUNT",
+				countId,
+				reason,
+				actorUserId,
+				occurredAt);
+	}
+
 	public UUID getId() { return id; }
 	public UUID getProductId() { return productId; }
 	public MovementType getMovementType() { return movementType; }

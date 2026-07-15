@@ -11,6 +11,8 @@ const ProductPage = lazy(() => import('./features/catalog/ProductPage').then((mo
 const ProductImportPage = lazy(() => import('./features/catalog/ProductImportPage').then((module) => ({ default: module.ProductImportPage })))
 const InventoryPage = lazy(() => import('./features/inventory/InventoryPage').then((module) => ({ default: module.InventoryPage })))
 const GoodsReceiptPage = lazy(() => import('./features/inventory/GoodsReceiptPage').then((module) => ({ default: module.GoodsReceiptPage })))
+const StockCountPage = lazy(() => import('./features/inventory/StockCountPage').then((module) => ({ default: module.StockCountPage })))
+const CustomerPage = lazy(() => import('./features/customers/CustomerPage').then((module) => ({ default: module.CustomerPage })))
 
 const currentUserQueryKey = ['current-user'] as const
 
@@ -72,6 +74,8 @@ export function App() {
           <Route path="/products/import" element={canImport ? <ProductImportPage /> : <Navigate replace to="/products" />} />
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/goods-receipts" element={canImport ? <GoodsReceiptPage /> : <Navigate replace to="/inventory" />} />
+          <Route path="/stock-counts" element={canImport ? <StockCountPage role={user.role} /> : <Navigate replace to="/inventory" />} />
+          <Route path="/customers" element={user.role !== 'INVENTORY_STAFF' ? <CustomerPage role={user.role} /> : <Navigate replace to="/" />} />
           <Route path="*" element={<Navigate replace to="/" />} />
         </Routes>
       </Suspense>
