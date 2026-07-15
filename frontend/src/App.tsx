@@ -1,8 +1,14 @@
 import { Alert, Box, CircularProgress, Container } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { lazy, Suspense } from 'react'
+import { Navigate, Route, Routes } from 'react-router'
 import { AuthenticatedHome } from './features/auth/AuthenticatedHome'
+import { AuthenticatedShell } from './features/auth/AuthenticatedShell'
 import { getCurrentUser, login, logout } from './features/auth/authApi'
 import { LoginPage } from './features/auth/LoginPage'
+
+const ProductPage = lazy(() => import('./features/catalog/ProductPage').then((module) => ({ default: module.ProductPage })))
+const ProductImportPage = lazy(() => import('./features/catalog/ProductImportPage').then((module) => ({ default: module.ProductImportPage })))
 
 const currentUserQueryKey = ['current-user'] as const
 
@@ -48,11 +54,23 @@ export function App() {
     )
   }
 
+  const user = currentUserQuery.data
+  const canImport = user.role !== 'CASHIER'
+
   return (
-    <AuthenticatedHome
+    <AuthenticatedShell
       isLoggingOut={logoutMutation.isPending}
       onLogout={logoutMutation.mutate}
-      user={currentUserQuery.data}
-    />
+      user={user}
+    >
+      <Suspense fallback={<CircularProgress aria-label="กำลังโหลดหน้า" />}>
+        <Routes>
+          <Route path="/" element={<AuthenticatedHome />} />
+          <Route path="/products" element={<ProductPage role={user.role} />} />
+          <Route path="/products/import" element={canImport ? <ProductImportPage /> : <Navigate replace to="/products" />} />
+          <Route path="*" element={<Navigate replace to="/" />} />
+        </Routes>
+      </Suspense>
+    </AuthenticatedShell>
   )
 }
